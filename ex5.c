@@ -1,6 +1,6 @@
 /***********
- ID:211438973
- NAME:Tawfek Watted
+ ID:
+ NAME:
 ***********/
 
 #include <stdio.h>
@@ -122,14 +122,18 @@ void expandDB(){
             newDB[i][j]=NULL;
         }
     }
-    // to copy old data
+
+    // Copy linearly to maintain order
+    int idx=0;
     for(int i=0;i<dbSize;i++){
         for(int j=0;j<dbSize;j++){
-            newDB[i][j]=database[i][j];
+            if(database[i][j]!=NULL){
+                newDB[idx/newSize][idx%newSize]=database[i][j];
+                idx++;
+            }
         }
     }
 
-    // to free old database structure (not the shows)
     if(database!=NULL){
         for(int i=0;i<dbSize;i++){
             free(database[i]);
@@ -268,40 +272,35 @@ Episode *findEpisode(Season *season,char *name){
     return NULL;
 }
 // to add a TV show
-void addShow() {
+void addShow(){
     printf("Enter the name of the show:\n");
-    char *name = getString();
+    char *name=getString();
 
-    // Check if show already exists
-    if (findShow(name) != NULL) {
+    if(findShow(name)!=NULL){
         printf("Show already exists.\n");
         free(name);
         return;
     }
 
-    // Create new show
-    TVShow *show = (TVShow *)malloc(sizeof(TVShow));
-    show->name = name;
-    show->seasons = NULL;
+    TVShow *show=(TVShow *)malloc(sizeof(TVShow));
+    show->name=name;
+    show->seasons=NULL;
 
-    // Check if we need to expand
-    int numShows = countShows();
-    if (dbSize == 0 || numShows >= dbSize * dbSize) {
+    int numShows=countShows();
+    if(dbSize==0||numShows>=dbSize*dbSize){
         expandDB();
     }
 
-    // Find correct position (alphabetically) and insert
-    int inserted = 0;
-    for (int i = 0; i < dbSize && !inserted; i++) {
-        for (int j = 0; j < dbSize && !inserted; j++) {
-            if (database[i][j] == NULL) {
-                database[i][j] = show;
-                inserted = 1;
-            } else if (strcmp(show->name, database[i][j]->name) < 0) {
-                // Shift everything to the right
-                TVShow *temp = database[i][j];
-                database[i][j] = show;
-                show = temp;
+    TVShow *toInsert=show;
+    for(int i=0;i<dbSize;i++){
+        for(int j=0;j<dbSize;j++){
+            if(database[i][j]==NULL){
+                database[i][j]=toInsert;
+                return;
+            } else if (strcmp(toInsert->name,database[i][j]->name)<0){
+                TVShow *temp=database[i][j];
+                database[i][j]=toInsert;
+                toInsert=temp;
             }
         }
     }
