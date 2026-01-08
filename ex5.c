@@ -268,62 +268,44 @@ Episode *findEpisode(Season *season,char *name){
     return NULL;
 }
 // to add a TV show
-void addShow(){
+void addShow() {
     printf("Enter the name of the show:\n");
-    char *name=getString();
+    char *name = getString();
 
     // Check if show already exists
-    if(findShow(name)!=NULL){
+    if (findShow(name) != NULL) {
         printf("Show already exists.\n");
         free(name);
         return;
     }
-    // creating new show
-    TVShow *show=(TVShow *)malloc(sizeof(TVShow));
-    show->name=name;
-    show->seasons=NULL;
 
-    // to check if we need to expand
-    int numShows=countShows();
-    if(dbSize==0||numShows>=dbSize*dbSize){
+    // Create new show
+    TVShow *show = (TVShow *)malloc(sizeof(TVShow));
+    show->name = name;
+    show->seasons = NULL;
+
+    // Check if we need to expand
+    int numShows = countShows();
+    if (dbSize == 0 || numShows >= dbSize * dbSize) {
         expandDB();
     }
-    //to collect all existing shows into an array
-    TVShow **allShows=(TVShow **)malloc((numShows+1)*sizeof(TVShow *));
-    int idx=0;
-    for(int i=0;i<dbSize;i++){
-        for(int j=0;j<dbSize;j++){
-            if(database[i][j]!=NULL){
-                allShows[idx++]=database[i][j];
-            }
-        }
-    }
-    allShows[idx]=show;
-    // sorting alphabetically using insertion sort
-    for(int i=1;i<=numShows;i++){
-        TVShow *key=allShows[i];
-        int j=i-1;
-        while(j>=0&&strcmp(allShows[j]->name,key->name)>0){
-            allShows[j+1]=allShows[j];
-            j--;
-        }
-        allShows[j+1]=key;
-    }
 
-    // to put sorted shows back into database
-    idx=0;
-    for(int i=0;i<dbSize;i++){
-        for(int j = 0; j < dbSize; j++){
-            if(idx<=numShows){
-                database[i][j]=allShows[idx++];
-            } else{
-                database[i][j]=NULL;
+    // Find correct position (alphabetically) and insert
+    int inserted = 0;
+    for (int i = 0; i < dbSize && !inserted; i++) {
+        for (int j = 0; j < dbSize && !inserted; j++) {
+            if (database[i][j] == NULL) {
+                database[i][j] = show;
+                inserted = 1;
+            } else if (strcmp(show->name, database[i][j]->name) < 0) {
+                // Shift everything to the right
+                TVShow *temp = database[i][j];
+                database[i][j] = show;
+                show = temp;
             }
         }
     }
-    free(allShows);
 }
-
 // adding a season
 void addSeason(){
     printf("Enter the name of the show:\n");
