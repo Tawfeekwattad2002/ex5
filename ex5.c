@@ -281,24 +281,38 @@ void addShow(){
     TVShow *show=(TVShow *)malloc(sizeof(TVShow));
     show->name=name;
     show->seasons=NULL;
-
     // checking if we need to expand
     int numShows=countShows();
     if(dbSize==0||numShows>=dbSize*dbSize){
         expandDB();
     }
-    // finding the correct position (by the alphabet) and insert
+    // Find correct position and shift everything after it
     int inserted=0;
+    TVShow *toInsert=show;
+
     for(int i=0;i<dbSize&&!inserted;i++){
         for(int j=0;j<dbSize&&!inserted;j++){
             if(database[i][j]==NULL){
-                database[i][j]=show;
+                // Found empty spot
+                database[i][j]=toInsert;
                 inserted=1;
-            } else if(strcmp(show->name,database[i][j]->name)<0){
-                // shifting everything to the right
+            } else if(strcmp(toInsert->name,database[i][j]->name)<0){
+                // Need to insert here, shift everything else
                 TVShow *temp=database[i][j];
-                database[i][j]=show;
-                show=temp;
+                database[i][j]=toInsert;
+                toInsert=temp;
+            }
+        }
+    }
+    // if we still have a show to insert(it shouldn't happen if expandDB works correctly)
+    if(!inserted && toInsert!=NULL){
+        // This shouldn't happen, but just in case
+        for(int i=0;i<dbSize;i++){
+            for(int j=0;j<dbSize;j++){
+                if(database[i][j]==NULL){
+                    database[i][j]=toInsert;
+                    return;
+                }
             }
         }
     }
@@ -351,7 +365,6 @@ void addSeason(){
 void addEpisode(){
     printf("Enter the name of the show:\n");
     char *showName=getString();
-
     TVShow *show=findShow(showName);
     if(show==NULL){
         printf("Show not found.\n");
@@ -374,6 +387,12 @@ void addEpisode(){
     printf("Enter the name of the episode:\n");
     char *episodeName=getString();
 
+    // checking if there is an episode already exists
+    if(findEpisode(season,episodeName)!=NULL){
+        printf("Episode already exists.\n");
+        free(episodeName);
+        return;
+    }
     printf("Enter the length (xx:xx:xx):\n");
     char *length=getString();
     // to validate length
@@ -382,14 +401,6 @@ void addEpisode(){
         free(length);
         length=getString();
     }
-    // checking if there is an episode already exists
-    if (findEpisode(season,episodeName)!=NULL) {
-        printf("Episode already exists.\n");
-        free(episodeName);
-        free(length);
-        return;
-    }
-
     printf("Enter the position:\n");
     int position=getInt();
 
