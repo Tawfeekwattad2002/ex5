@@ -271,53 +271,41 @@ Episode *findEpisode(Season *season,char *name){
 void addShow(){
     printf("Enter the name of the show:\n");
     char *name=getString();
-    // checking if there is already exists show with the name
+
+    // to check if show already exists
     if(findShow(name)!=NULL){
         printf("Show already exists.\n");
         free(name);
         return;
     }
-    // creating a new show
+
+    // creating new show
     TVShow *show=(TVShow *)malloc(sizeof(TVShow));
     show->name=name;
     show->seasons=NULL;
+
     // checking if we need to expand
     int numShows=countShows();
     if(dbSize==0||numShows>=dbSize*dbSize){
         expandDB();
     }
-    // Find correct position and shift everything after it
-    int inserted=0;
-    TVShow *toInsert=show;
 
+    // to find correct position (alphabetically) and insert
+    int inserted=0;
     for(int i=0;i<dbSize&&!inserted;i++){
         for(int j=0;j<dbSize&&!inserted;j++){
             if(database[i][j]==NULL){
-                // Found empty spot
-                database[i][j]=toInsert;
+                database[i][j]=show;
                 inserted=1;
-            } else if(strcmp(toInsert->name,database[i][j]->name)<0){
-                // Need to insert here, shift everything else
+            } else if(strcmp(show->name,database[i][j]->name)<0){
+                // Shift everything to the right
                 TVShow *temp=database[i][j];
-                database[i][j]=toInsert;
-                toInsert=temp;
-            }
-        }
-    }
-    // if we still have a show to insert(it shouldn't happen if expandDB works correctly)
-    if(!inserted && toInsert!=NULL){
-        // This shouldn't happen, but just in case
-        for(int i=0;i<dbSize;i++){
-            for(int j=0;j<dbSize;j++){
-                if(database[i][j]==NULL){
-                    database[i][j]=toInsert;
-                    return;
-                }
+                database[i][j]=show;
+                show=temp;
             }
         }
     }
 }
-
 // adding a season
 void addSeason(){
     printf("Enter the name of the show:\n");
@@ -401,6 +389,7 @@ void addEpisode(){
         free(length);
         length=getString();
     }
+
     printf("Enter the position:\n");
     int position=getInt();
 
