@@ -163,14 +163,18 @@ void shrinkDB(){
             newDB[i][j]=NULL;
         }
     }
-    // to copy data
-    for(int i=0;i<newSize;i++){
-        for(int j=0;j<newSize;j++){
-            newDB[i][j]=database[i][j];
+
+    // Copy linearly to maintain order
+    int idx = 0;
+    for(int i=0;i<dbSize;i++){
+        for(int j=0;j<dbSize;j++){
+            if(database[i][j]!=NULL){
+                newDB[idx/newSize][idx%newSize] = database[i][j];
+                idx++;
+            }
         }
     }
 
-    // to free old database
     for(int i=0;i<dbSize;i++){
         free(database[i]);
     }
